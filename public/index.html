@@ -100,6 +100,15 @@
 <!-- Toast -->
 <div class="toast" id="toast"></div>
 
+<!-- LOADING PAGE -->
+<div class="page active" id="loadingPage" style="align-items:center;justify-content:center;background:linear-gradient(135deg,#FF4B6E,#FF8C6B)">
+  <div style="text-align:center;color:#fff">
+    <div style="font-size:72px">💕</div>
+    <div style="font-size:32px;font-weight:800;margin-top:8px">Amore</div>
+    <div style="margin-top:24px"><div class="spinner" style="border-color:rgba(255,255,255,0.3);border-top-color:#fff;margin:0 auto"></div></div>
+  </div>
+</div>
+
 <!-- LOGIN PAGE -->
 <div class="page active" id="loginPage">
   <div class="auth-container">
@@ -288,6 +297,7 @@ window.logout = async () => {
 
 onAuthStateChanged(auth, async (user) => {
   if (user) {
+    showPage('loadingPage');
     try {
       const snap = await getDoc(doc(db, 'users', user.uid));
       if (snap.exists()) {
