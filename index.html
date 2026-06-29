@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <meta name="theme-color" content="#FF4B6E">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Amore">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/icon-192.png">
+  <title>Amore Dating</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #fff; color: #1a1a2e; max-width: 480px; margin: 0 auto; min-height: 100vh; }
+    :root { --primary: #FF4B6E; --secondary: #FF8C6B; --text: #1a1a2e; --light: #f8f8f8; --border: #ebebeb; }
+
+    /* Pages */
+    .page { display: none; min-height: 100vh; flex-direction: column; }
+    .page.active { display: flex; }
+
+    /* Auth */
+    .auth-container { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 32px 24px; }
+    .auth-logo { font-size: 48px; text-align: center; margin-bottom: 8px; }
+    .auth-title { font-size: 28px; font-weight: 800; text-align: center; color: var(--primary); margin-bottom: 4px; }
+    .auth-sub { font-size: 14px; color: #888; text-align: center; margin-bottom: 32px; }
+    .input { width: 100%; padding: 14px 16px; border: 1.5px solid var(--border); border-radius: 12px; font-size: 16px; outline: none; margin-bottom: 12px; }
+    .input:focus { border-color: var(--primary); }
+    .btn { width: 100%; padding: 16px; border: none; border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer; transition: opacity 0.2s; }
+    .btn:active { opacity: 0.8; }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-outline { background: transparent; color: var(--primary); border: 1.5px solid var(--primary); margin-top: 8px; }
+    .auth-switch { text-align: center; margin-top: 16px; font-size: 14px; color: #888; }
+    .auth-switch span { color: var(--primary); cursor: pointer; font-weight: 600; }
+
+    /* Bottom Nav */
+    .bottom-nav { display: flex; position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px; background: #fff; border-top: 1px solid var(--border); padding: 8px 0 20px; z-index: 100; }
+    .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; cursor: pointer; padding: 4px; }
+    .nav-icon { font-size: 22px; }
+    .nav-label { font-size: 10px; color: #888; }
+    .nav-item.active .nav-label { color: var(--primary); }
+    .nav-item.active .nav-icon { filter: none; }
+
+    /* Header */
+    .header { display: flex; align-items: center; padding: 16px; border-bottom: 1px solid var(--border); background: #fff; position: sticky; top: 0; z-index: 50; }
+    .header-title { flex: 1; font-size: 20px; font-weight: 800; color: var(--primary); }
+
+    /* Content */
+    .content { flex: 1; overflow-y: auto; padding-bottom: 80px; }
+
+    /* Cards */
+    .card { background: #fff; border-radius: 16px; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,0.08); margin: 16px; }
+    .card-img { width: 100%; height: 400px; object-fit: cover; }
+    .card-info { padding: 16px; }
+    .card-name { font-size: 22px; font-weight: 700; }
+    .card-location { font-size: 13px; color: #888; margin-top: 4px; }
+    .card-bio { font-size: 14px; color: #555; margin-top: 8px; }
+
+    /* Action buttons */
+    .action-btns { display: flex; justify-content: center; gap: 20px; padding: 16px; }
+    .action-btn { width: 60px; height: 60px; border-radius: 30px; border: none; font-size: 26px; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+    .btn-pass { background: #fff; }
+    .btn-like { background: var(--primary); }
+    .btn-super { background: #4FC3F7; }
+
+    /* Messages */
+    .chat-list { padding: 0; }
+    .chat-item { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-bottom: 1px solid var(--border); cursor: pointer; }
+    .chat-item:active { background: var(--light); }
+    .avatar { width: 50px; height: 50px; border-radius: 25px; object-fit: cover; background: var(--light); }
+    .chat-info { flex: 1; }
+    .chat-name { font-size: 15px; font-weight: 600; }
+    .chat-last { font-size: 13px; color: #888; margin-top: 2px; }
+    .chat-time { font-size: 11px; color: #888; }
+
+    /* Profile */
+    .profile-header { position: relative; }
+    .profile-cover { width: 100%; height: 250px; object-fit: cover; }
+    .profile-avatar { width: 90px; height: 90px; border-radius: 45px; border: 3px solid #fff; position: absolute; bottom: -45px; left: 50%; transform: translateX(-50%); object-fit: cover; }
+    .profile-body { padding: 60px 20px 20px; text-align: center; }
+    .profile-name { font-size: 24px; font-weight: 800; }
+    .profile-location { font-size: 14px; color: #888; margin-top: 4px; }
+
+    /* Loading */
+    .loading { display: flex; align-items: center; justify-content: center; min-height: 200px; }
+    .spinner { width: 40px; height: 40px; border: 3px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Toast */
+    .toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%); background: #333; color: #fff; padding: 10px 20px; border-radius: 20px; font-size: 14px; z-index: 999; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
+    .toast.show { opacity: 1; }
+
+    /* Install banner */
+    .install-banner { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: #fff; padding: 12px 16px; display: flex; align-items: center; gap: 12px; }
+    .install-banner button { background: #fff; color: var(--primary); border: none; padding: 6px 14px; border-radius: 20px; font-weight: 700; cursor: pointer; font-size: 13px; }
+  </style>
+</head>
+<body>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- LOGIN PAGE -->
+<div class="page active" id="loginPage">
+  <div class="auth-container">
+    <div class="auth-logo">💕</div>
+    <div class="auth-title">Amore</div>
+    <div class="auth-sub">Find your perfect match</div>
+    <input class="input" type="email" id="loginEmail" placeholder="Email address">
+    <input class="input" type="password" id="loginPassword" placeholder="Password">
+    <button class="btn btn-primary" onclick="login()">Sign In</button>
+    <button class="btn btn-outline" onclick="showPage('signupPage')">Create Account</button>
+    <div class="auth-switch">Forgot password? <span onclick="resetPassword()">Reset</span></div>
+  </div>
+</div>
+
+<!-- SIGNUP PAGE -->
+<div class="page" id="signupPage">
+  <div class="auth-container">
+    <div class="auth-logo">💕</div>
+    <div class="auth-title">Join Amore</div>
+    <div class="auth-sub">Create your account</div>
+    <input class="input" type="text" id="signupName" placeholder="Full name">
+    <input class="input" type="email" id="signupEmail" placeholder="Email address">
+    <input class="input" type="password" id="signupPassword" placeholder="Password (min 6 chars)">
+    <button class="btn btn-primary" onclick="signup()">Create Account</button>
+    <button class="btn btn-outline" onclick="showPage('loginPage')">Already have account? Sign In</button>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div class="page" id="appPage">
+  <!-- Bottom Nav -->
+  <nav class="bottom-nav">
+    <div class="nav-item active" onclick="switchTab('discoverTab', this)">
+      <span class="nav-icon">🔍</span>
+      <span class="nav-label">Discover</span>
+    </div>
+    <div class="nav-item" onclick="switchTab('likesTab', this)">
+      <span class="nav-icon">❤️</span>
+      <span class="nav-label">Likes</span>
+    </div>
+    <div class="nav-item" onclick="switchTab('messagesTab', this)">
+      <span class="nav-icon">💬</span>
+      <span class="nav-label">Messages</span>
+    </div>
+    <div class="nav-item" onclick="switchTab('profileTab', this)">
+      <span class="nav-icon">👤</span>
+      <span class="nav-label">Profile</span>
+    </div>
+  </nav>
+
+  <!-- DISCOVER TAB -->
+  <div id="discoverTab" class="content">
+    <div class="header">
+      <span class="header-title">Amore 💕</span>
+      <span style="font-size:20px;cursor:pointer" onclick="switchTab('searchTab',null)">🔍</span>
+    </div>
+    <div id="swipeCards">
+      <div class="loading"><div class="spinner"></div></div>
+    </div>
+    <div class="action-btns">
+      <button class="action-btn btn-pass" onclick="swipePass()">❌</button>
+      <button class="action-btn btn-super" onclick="swipeSuperLike()">⭐</button>
+      <button class="action-btn btn-like" onclick="swipeLike()">❤️</button>
+    </div>
+  </div>
+
+  <!-- LIKES TAB -->
+  <div id="likesTab" class="content" style="display:none">
+    <div class="header"><span class="header-title">Likes ❤️</span></div>
+    <div id="likesList"><div class="loading"><div class="spinner"></div></div></div>
+  </div>
+
+  <!-- MESSAGES TAB -->
+  <div id="messagesTab" class="content" style="display:none">
+    <div class="header">
+      <span class="header-title">Messages 💕</span>
+      <span style="font-size:20px;cursor:pointer" onclick="switchTab('searchTab',null)">🔍</span>
+    </div>
+    <div id="messagesList"><div class="loading"><div class="spinner"></div></div></div>
+  </div>
+
+  <!-- PROFILE TAB -->
+  <div id="profileTab" class="content" style="display:none">
+    <div id="profileContent"><div class="loading"><div class="spinner"></div></div></div>
+  </div>
+
+  <!-- SEARCH TAB -->
+  <div id="searchTab" class="content" style="display:none">
+    <div class="header">
+      <span onclick="switchTab('discoverTab',null)" style="font-size:24px;cursor:pointer;margin-right:12px">‹</span>
+      <input style="flex:1;border:1.5px solid #eee;border-radius:20px;padding:8px 16px;font-size:15px;outline:none" placeholder="Search by name..." id="searchInput" oninput="searchUsers()">
+    </div>
+    <div id="searchResults"></div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+import { getFirestore, collection, query, where, getDocs, doc, getDoc, setDoc, addDoc, updateDoc, orderBy, limit, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDMEzHwG5NCx-4Sr-rCnFAGrFlWLrLsmOc",
+  authDomain: "amore-dating-9b956.firebaseapp.com",
+  projectId: "amore-dating-9b956",
+  storageBucket: "amore-dating-9b956.firebasestorage.app",
+  messagingSenderId: "525255599408",
+  appId: "1:525255599408:web:504a867157ddb2879454f5",
+  databaseURL: "https://amore-dating-9b956-default-rtdb.firebaseio.com"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+let currentUser = null;
+let currentProfile = null;
+let profiles = [];
+let profileIndex = 0;
+
+window.showPage = (pageId) => {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(pageId).classList.add('active');
+};
+
+window.switchTab = (tabId, navEl) => {
+  document.querySelectorAll('.content').forEach(t => t.style.display = 'none');
+  document.getElementById(tabId).style.display = 'flex';
+  document.getElementById(tabId).style.flexDirection = 'column';
+  if (navEl) {
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    navEl.classList.add('active');
+  }
+  if (tabId === 'messagesTab') loadMessages();
+  if (tabId === 'likesTab') loadLikes();
+  if (tabId === 'profileTab') loadProfile();
+  if (tabId === 'discoverTab') loadProfiles();
+};
+
+window.toast = (msg) => {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+};
+
+window.login = async () => {
+  const email = document.getElementById('loginEmail').value;
+  const password = document.getElementById('loginPassword').value;
+  if (!email || !password) return toast('Please fill all fields');
+  try {
+    await signInWithEmailAndPassword(auth, email, password);
+  } catch(e) { toast(e.message); }
+};
+
+window.signup = async () => {
+  const name = document.getElementById('signupName').value;
+  const email = document.getElementById('signupEmail').value;
+  const password = document.getElementById('signupPassword').value;
+  if (!name || !email || !password) return toast('Please fill all fields');
+  try {
+    const cred = await createUserWithEmailAndPassword(auth, email, password);
+    await setDoc(doc(db, 'users', cred.user.uid), {
+      id: cred.user.uid,
+      name, email,
+      createdAt: new Date().toISOString(),
+      onboardingComplete: false,
+      photos: [],
+    });
+  } catch(e) { toast(e.message); }
+};
+
+window.resetPassword = async () => {
+  const email = document.getElementById('loginEmail').value;
+  if (!email) return toast('Enter your email first');
+  try {
+    await sendPasswordResetEmail(auth, email);
+    toast('Reset email sent!');
+  } catch(e) { toast(e.message); }
+};
+
+window.logout = async () => {
+  await signOut(auth);
+};
+
+onAuthStateChanged(auth, async (user) => {
+  if (user) {
+    const snap = await getDoc(doc(db, 'users', user.uid));
+    currentUser = { id: user.uid, ...snap.data() };
+    showPage('appPage');
+    loadProfiles();
+  } else {
+    currentUser = null;
+    showPage('loginPage');
+  }
+});
+
+async function loadProfiles() {
+  const el = document.getElementById('swipeCards');
+  el.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+  try {
+    const snap = await getDocs(collection(db, 'users'));
+    profiles = snap.docs
+      .map(d => ({ id: d.id, ...d.data() }))
+      .filter(u => u.id !== currentUser?.id && u.photos?.length > 0);
+    profileIndex = 0;
+    showCard();
+  } catch(e) { el.innerHTML = '<p style="text-align:center;padding:40px;color:#888">No profiles found</p>'; }
+}
+
+function showCard() {
+  const el = document.getElementById('swipeCards');
+  if (profileIndex >= profiles.length) {
+    el.innerHTML = '<div style="text-align:center;padding:60px 20px"><div style="font-size:48px">💫</div><p style="font-size:18px;font-weight:700;margin-top:16px">No more profiles!</p><p style="color:#888;margin-top:8px">Check back later</p></div>';
+    return;
+  }
+  currentProfile = profiles[profileIndex];
+  el.innerHTML = `
+    <div class="card">
+      <img class="card-img" src="${currentProfile.photos?.[0] ?? 'https://via.placeholder.com/400'}" onerror="this.src='https://via.placeholder.com/400'">
+      <div class="card-info">
+        <div class="card-name">${currentProfile.name ?? 'Unknown'}, ${currentProfile.age ?? ''}</div>
+        <div class="card-location">📍 ${currentProfile.location ?? ''}</div>
+        <div class="card-bio">${currentProfile.bio ?? ''}</div>
+      </div>
+    </div>`;
+}
+
+window.swipeLike = async () => {
+  if (!currentProfile) return;
+  try {
+    await addDoc(collection(db, 'likes'), {
+      fromUserId: currentUser.id,
+      toUserId: currentProfile.id,
+      createdAt: new Date().toISOString(),
+    });
+    toast('❤️ Liked!');
+  } catch(e) {}
+  profileIndex++;
+  showCard();
+};
+
+window.swipePass = () => { profileIndex++; showCard(); };
+window.swipeSuperLike = async () => {
+  if (!currentProfile) return;
+  toast('⭐ Super Like!');
+  await window.swipeLike();
+};
+
+async function loadMessages() {
+  const el = document.getElementById('messagesList');
+  el.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+  try {
+    const q = query(collection(db, 'matches'), where('users', 'array-contains', currentUser.id));
+    const snap = await getDocs(q);
+    if (snap.empty) { el.innerHTML = '<p style="text-align:center;padding:40px;color:#888">No messages yet</p>'; return; }
+    el.innerHTML = '<div class="chat-list"></div>';
+    const list = el.querySelector('.chat-list');
+    for (const d of snap.docs) {
+      const data = d.data();
+      const otherId = data.users.find(u => u !== currentUser.id);
+      const otherSnap = await getDoc(doc(db, 'users', otherId));
+      const other = otherSnap.data();
+      list.innerHTML += `
+        <div class="chat-item" onclick="openChat('${d.id}','${otherId}')">
+          <img class="avatar" src="${other?.photos?.[0] ?? 'https://via.placeholder.com/50'}" onerror="this.src='https://via.placeholder.com/50'">
+          <div class="chat-info">
+            <div class="chat-name">${other?.name ?? 'User'}</div>
+            <div class="chat-last">${data.lastMessage ?? 'Say hello! 👋'}</div>
+          </div>
+        </div>`;
+    }
+  } catch(e) { el.innerHTML = '<p style="text-align:center;padding:40px;color:#888">Error loading messages</p>'; }
+}
+
+async function loadLikes() {
+  const el = document.getElementById('likesList');
+  el.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+  try {
+    const q = query(collection(db, 'likes'), where('toUserId', '==', currentUser.id));
+    const snap = await getDocs(q);
+    if (snap.empty) { el.innerHTML = '<p style="text-align:center;padding:40px;color:#888">No likes yet</p>'; return; }
+    el.innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:16px"></div>';
+    const grid = el.querySelector('div');
+    for (const d of snap.docs) {
+      const data = d.data();
+      const userSnap = await getDoc(doc(db, 'users', data.fromUserId));
+      const user = userSnap.data();
+      grid.innerHTML += `
+        <div style="border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.1)">
+          <img src="${user?.photos?.[0] ?? 'https://via.placeholder.com/200'}" style="width:100%;height:150px;object-fit:cover">
+          <div style="padding:8px;font-weight:600;font-size:14px">${user?.name ?? 'User'}</div>
+        </div>`;
+    }
+  } catch(e) { el.innerHTML = '<p style="text-align:center;padding:40px;color:#888">Error loading likes</p>'; }
+}
+
+async function loadProfile() {
+  const el = document.getElementById('profileContent');
+  if (!currentUser) return;
+  el.innerHTML = `
+    <div class="profile-header">
+      <img class="profile-cover" src="${currentUser.photos?.[0] ?? 'https://via.placeholder.com/480x250'}" onerror="this.src='https://via.placeholder.com/480x250'">
+      <img class="profile-avatar" src="${currentUser.photos?.[0] ?? 'https://via.placeholder.com/90'}" onerror="this.src='https://via.placeholder.com/90'">
+    </div>
+    <div class="profile-body">
+      <div class="profile-name">${currentUser.name ?? 'User'}</div>
+      <div class="profile-location">📍 ${currentUser.location ?? 'Location not set'}</div>
+      <p style="margin-top:12px;color:#555;font-size:14px">${currentUser.bio ?? 'No bio yet'}</p>
+      <button class="btn btn-primary" style="margin-top:24px" onclick="logout()">Log Out</button>
+    </div>`;
+}
+
+window.openChat = (matchId, otherId) => {
+  toast('Chat coming soon!');
+};
+
+window.searchUsers = async () => {
+  const term = document.getElementById('searchInput').value.trim();
+  const el = document.getElementById('searchResults');
+  if (!term) { el.innerHTML = ''; return; }
+  try {
+    const snap = await getDocs(collection(db, 'users'));
+    const results = snap.docs
+      .map(d => ({ id: d.id, ...d.data() }))
+      .filter(u => u.id !== currentUser?.id && u.name?.toLowerCase().includes(term.toLowerCase()));
+    if (!results.length) { el.innerHTML = '<p style="text-align:center;padding:40px;color:#888">No users found</p>'; return; }
+    el.innerHTML = results.map(u => `
+      <div class="chat-item">
+        <img class="avatar" src="${u.photos?.[0] ?? 'https://via.placeholder.com/50'}" onerror="this.src='https://via.placeholder.com/50'">
+        <div class="chat-info">
+          <div class="chat-name">${u.name}</div>
+          <div class="chat-last">${u.location ?? ''}</div>
+        </div>
+      </div>`).join('');
+  } catch(e) {}
+};
+
+// Register service worker for PWA
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js').catch(() => {});
+}
+</script>
+</body>
+</html>
