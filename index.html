@@ -287,9 +287,18 @@ window.logout = async () => {
 
 onAuthStateChanged(auth, async (user) => {
   if (user) {
-    const snap = await getDoc(doc(db, 'users', user.uid));
-    currentUser = { id: user.uid, ...snap.data() };
+    try {
+      const snap = await getDoc(doc(db, 'users', user.uid));
+      if (snap.exists()) {
+        currentUser = { id: user.uid, ...snap.data() };
+      } else {
+        currentUser = { id: user.uid, name: user.displayName ?? user.email?.split('@')[0] ?? 'User', email: user.email, photos: [] };
+      }
+    } catch(e) {
+      currentUser = { id: user.uid, name: user.email?.split('@')[0] ?? 'User', email: user.email, photos: [] };
+    }
     showPage('appPage');
+    switchTab('discoverTab', document.querySelector('.nav-item'));
     loadProfiles();
   } else {
     currentUser = null;
