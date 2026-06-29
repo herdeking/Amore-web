@@ -314,7 +314,9 @@ async function loadProfiles() {
     const snap = await getDocs(collection(db, 'users'));
     profiles = snap.docs
       .map(d => ({ id: d.id, ...d.data() }))
-      .filter(u => u.id !== currentUser?.id && u.photos?.length > 0);
+      .filter(u => u.id !== currentUser?.id && (u.photos?.length > 0 || u.photoURL));
+    // Shuffle profiles
+    profiles = profiles.sort(() => Math.random() - 0.5);
     profileIndex = 0;
     showCard();
   } catch(e) { el.innerHTML = '<p style="text-align:center;padding:40px;color:#888">No profiles found</p>'; }
