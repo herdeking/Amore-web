@@ -385,10 +385,32 @@ window.viewProfile = (userId) => {
       ${photos.length > 1 ? `<div style="margin-top:20px"><div style="font-weight:700;margin-bottom:12px">Photos (${photos.length})</div><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px">${photos.map(function(ph){return `<img src="${ph}" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px;cursor:pointer" onclick="viewPhotoFull('${ph}')" onerror="this.style.display='none'">`;}).join('')}</div></div>` : ''}
       <div style="display:flex;gap:12px;margin-top:24px">
         <button class="btn btn-primary" onclick="swipeLike();this.closest('div[style*=fixed]').remove()">❤️ Like</button>
-        <button class="btn btn-outline" onclick="this.closest('div[style*=fixed]').remove()">Skip</button>
+        <button class="btn btn-outline" onclick="startChatFrom('${p.id}')">💬 Message</button>
       </div>
+      <button class="btn btn-outline" style="margin-top:8px" onclick="this.closest('div[style*=fixed]').remove()">Skip</button>
     </div>`;
   document.body.appendChild(modal);
+};
+
+window.startChatFrom = async function(otherId) {
+  try {
+    const q = query(collection(db, 'matches'), where('users', 'array-contains', currentUser.id));
+    const snap = await getDocs(q);
+    let matchId = null;
+    snap.forEach(function(d) {
+      if (d.data().users.includes(otherId)) matchId = d.id;
+    });
+    if (!matchId) {
+      const ref = await addDoc(collection(db, 'matches'), {
+        users: [currentUser.id, otherId],
+        createdAt: new Date().toISOString(),
+      });
+      matchId = ref.id;
+    }
+    document.querySelectorAll('div[style*=fixed]').forEach(function(m){ m.remove(); });
+    switchTab('messagesTab', document.querySelectorAll('.nav-item')[2]);
+    toast('Match created! Find them in Messages.');
+  } catch(e) { toast('Error: ' + e.message); }
 };
 
 window.swipeLike = async () => {
